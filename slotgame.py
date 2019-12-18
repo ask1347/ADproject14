@@ -48,9 +48,9 @@ class SlotGame(QWidget):
         self.currentMoney.setReadOnly(True)
         self.stakeLabel = QLabel("stake: ")
         self.stake = QLineEdit()
-        self.count = QLineEdit("남은 횟수: ", self)
+        self.count = QLineEdit("Left trials: ", self)
         self.count.setReadOnly(True)
-        self.statusBar = QLineEdit("상태: ", self)
+        self.statusBar = QLineEdit("status", self)
         self.statusBar.setReadOnly(True)
 
         userLayout = QGridLayout()
@@ -95,7 +95,7 @@ class mainWindow(QMainWindow):
 
         #실행횟수를 5회로 제한
         self.currentTrial = 5
-        self.gameWidget.count.setText(str(self.currentTrial))
+        self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
 
         # 게임이 시작될때 슬롯값을 비우는 기능
         self.game = Slot()
@@ -115,7 +115,6 @@ class mainWindow(QMainWindow):
             self.gameWidget.count.setText(str(self.currentTrial))
             try:
                 stake = int(self.gameWidget.stake.text())
-                print(stake)
                 self.currentMoney -= stake
                 self.gameWidget.currentMoney.setText(str(self.currentMoney))
             except ValueError as e:
@@ -144,6 +143,7 @@ class mainWindow(QMainWindow):
                 self.gameWidget.statusBar.setText("luckyyy!")
                 print("luckyyy!")
             else:
+                self.gameWidget.statusBar.setText("kkwang!")
                 print("kkwang!")
 
         elif key == 'New Game':
