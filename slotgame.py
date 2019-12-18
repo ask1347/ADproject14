@@ -63,7 +63,7 @@ class SlotGame(QWidget):
         userLayout.addWidget(self.count, 2, 0, 1, 0)
         userLayout.addWidget(self.statusBar, 2, 1, 1, 3)
 
-        # Layout
+        # main Layout
         mainLayout = QGridLayout()
         mainLayout.addWidget(label, 0, 0)
         mainLayout.addLayout(outputLayout, 1, 0)
@@ -105,20 +105,23 @@ class mainWindow(QMainWindow):
         button = self.sender()
         key = button.text()
         stake = 0
-
+            #bet버튼 구현
         if key == 'Bet':
             print("Betting")
+            #실행횟수가 없을 때 메시지와 함께 게임진행이 안되도록
             if self.currentTrial <= 0:
                 print("No trial left")
                 self.gameWidget.statusBar.setText("No trial left")
                 return
             self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
+
             try:
                 stake = int(self.gameWidget.stake.text())
                 if stake > 0:
                     self.currentMoney -= stake
                     self.gameWidget.currentMoney.setText(str(self.currentMoney))
                     self.currentTrial -= 1
+                    #판돈을 걸지않거나 음수,숫자이외의 것을 입력할시 막는 기능
                 elif stake < 0:
                     print("You can't bet negative number")
                     self.gameWidget.statusBar.setText("You can't bet negative number")
@@ -131,19 +134,20 @@ class mainWindow(QMainWindow):
                 print("there is no stake value")
                 self.gameWidget.statusBar.setText("There is no stake value")
                 return
-            
-            self.gameWidget.stake.clear()
 
+            self.gameWidget.stake.clear()
+                #버튼을 누르면 랜덤하게 슬롯 설정 (0~999)
             self.slotValue = Slot.roll()
             for i in range(len(self.slotValue)):
                 self.gameWidget.outputs[i].setText(str(self.slotValue[i]))
+                #보상 및 계산
             if self.slotValue[0] == self.slotValue[1] and self.slotValue[0] == self.slotValue[2]:
                 self.gameWidget.statusBar.setText("good job")
                 print("good job")
                 self.currentMoney += stake * 10
                 self.gameWidget.currentMoney.setText(str(self.currentMoney))
-			    #하나만 체크해도 됨.
-                if self.slotValue[0] == 7:
+                #777의 경우 특별처리
+                if  self.slotValue[0] == 7:
                     self.gameWidget.statusBar.setText("Jack pot!")
                     print("Jack pot!")
                     self.currentMoney += stake * 100
@@ -156,21 +160,37 @@ class mainWindow(QMainWindow):
             else:
                 self.gameWidget.statusBar.setText("kkwang!")
                 print("kkwang!")
-
+        # New Game 버튼 구현
         elif key == 'New Game':
             print("new game")
+            #stake와 money를 초기화
             self.gameWidget.stake.clear()
             self.gameWidget.currentMoney.setText(str(self.currentMoney))
             self.currentMoney = 1000
             self.gameWidget.currentMoney.setText(str(self.currentMoney))
-
+            self.gameWidget.statusBar.setText("status")
+            # 시도 횟수를 초기화
             self.currentTrial = 5
             self.gameWidget.count.setText(str(self.currentTrial))
+            # 슬롯 초기화
             for i in range(len(self.slotValue)):
                 self.gameWidget.outputs[i].clear()
                 self.slotValue = [None, None, None]
 
-
+        # 돈이 0원 이하로 떨어질때 게임오버
+        if self.currentMoney <= 0:
+            self.currentTrial = 0
+            self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
+            print("You're bankrupt.")
+            self.gameWidget.statusBar.setText("You're bankrupt.Start new game.")
+            return
+        # 돈이 100000원 이상으로 늘어날때 게임클리어
+        elif self.currentMoney >= 100000:
+            self.currentTrial = 0
+            self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
+            print("Congratulations! You won!")
+            self.gameWidget.statusBar.setText("Congratulations! You won!")
+            return
 
 if __name__ == '__main__':
     import sys
