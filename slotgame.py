@@ -60,8 +60,8 @@ class SlotGame(QWidget):
         userLayout.addWidget(self.currentMoney, 0, 2)
         userLayout.addWidget(self.stakeLabel, 1, 1)
         userLayout.addWidget(self.stake, 1, 2)
-        userLayout.addWidget(self.count, 2, 0)
-        userLayout.addWidget(self.statusBar, 2, 1)
+        userLayout.addWidget(self.count, 2, 0, 1, 0)
+        userLayout.addWidget(self.statusBar, 2, 1, 1, 3)
 
         # Layout
         mainLayout = QGridLayout()
@@ -109,16 +109,27 @@ class mainWindow(QMainWindow):
         if key == 'Bet':
             print("Betting")
             if self.currentTrial <= 0:
-                print("no trial left")
+                print("No trial left")
+                self.gameWidget.statusBar.setText("No trial left")
                 return
-            self.currentTrial -= 1
-            self.gameWidget.count.setText(str(self.currentTrial))
+            self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
             try:
                 stake = int(self.gameWidget.stake.text())
-                self.currentMoney -= stake
-                self.gameWidget.currentMoney.setText(str(self.currentMoney))
+                if stake > 0:
+                    self.currentMoney -= stake
+                    self.gameWidget.currentMoney.setText(str(self.currentMoney))
+                    self.currentTrial -= 1
+                elif stake < 0:
+                    print("You can't bet negative number")
+                    self.gameWidget.statusBar.setText("You can't bet negative number")
+                    return
+                elif stake == 0:
+                    print("You can't bet for free")
+                    self.gameWidget.statusBar.setText("You can't bet for free")
+                    return
             except ValueError as e:
                 print("there is no stake value")
+                self.gameWidget.statusBar.setText("There is no stake value")
                 return
             
             self.gameWidget.stake.clear()
