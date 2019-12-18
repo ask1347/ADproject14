@@ -118,10 +118,16 @@ class mainWindow(QMainWindow):
             try:
                 stake = int(self.gameWidget.stake.text())
                 if stake > 0:
-                    self.currentMoney -= stake
-                    self.gameWidget.currentMoney.setText(str(self.currentMoney))
-                    self.currentTrial -= 1
-                    self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
+                    #판돈이 현재 소지금 보다 클 경우
+                    if stake <= self.currentMoney:
+                        self.currentMoney -= stake
+                        self.gameWidget.currentMoney.setText(str(self.currentMoney))
+                        self.currentTrial -= 1
+                        self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
+                    elif  stake >= self.currentMoney:
+                        print("You don't have enough money")
+                        self.gameWidget.statusBar.setText("You don't have enough money")
+                        return
                     #판돈을 걸지않거나 음수,숫자이외의 것을 입력할시 막는 기능
                 elif stake < 0:
                     print("You can't bet negative number")
