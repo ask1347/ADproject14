@@ -24,17 +24,16 @@ class SlotGame(QWidget):
         label.setAlignment(Qt.AlignCenter)
 
         #slot number
-        self.Xoutput = QLineEdit(self)
-        self.Xoutput.setReadOnly(True)
-        self.Youtput = QLineEdit(self)
-        self.Youtput.setReadOnly(True)
-        self.Zoutput = QLineEdit(self)
-        self.Zoutput.setReadOnly(True)
+        self.outputs = []
+        self.outputs.append(QLineEdit(self))
+        self.outputs.append(QLineEdit(self))
+        self.outputs.append(QLineEdit(self))
+        for output in self.outputs:
+            output.setReadOnly(True)
 
         outputLayout = QGridLayout()
-        outputLayout.addWidget(self.Xoutput, 0, 1, 1, 1)
-        outputLayout.addWidget(self.Youtput, 0, 2, 1, 1)
-        outputLayout.addWidget(self.Zoutput, 0, 3, 1, 1)
+        for i in range(1, 4):
+            outputLayout.addWidget(self.outputs[i-1], 0, i, 1, 1)
 
         slotlabel = QLabel("slot")
         slotlabel.setAlignment(Qt.AlignRight)
@@ -48,9 +47,9 @@ class SlotGame(QWidget):
         self.currentMoney = QLineEdit()
         self.currentMoney.setReadOnly(True)
         self.stakeLabel = QLabel("stake: ")
-        self.Stake = QLineEdit()
-        self.Count = QLineEdit("남은 횟수: ", self)
-        self.Count.setReadOnly(True)
+        self.stake = QLineEdit()
+        self.count = QLineEdit("남은 횟수: ", self)
+        self.count.setReadOnly(True)
         self.statusBar = QLineEdit("상태: ", self)
         self.statusBar.setReadOnly(True)
 
@@ -60,8 +59,8 @@ class SlotGame(QWidget):
         userLayout.addWidget(self.currentMoneyLabel, 0, 1)
         userLayout.addWidget(self.currentMoney, 0, 2)
         userLayout.addWidget(self.stakeLabel, 1, 1)
-        userLayout.addWidget(self.Stake, 1, 2)
-        userLayout.addWidget(self.Count, 2, 0)
+        userLayout.addWidget(self.stake, 1, 2)
+        userLayout.addWidget(self.count, 2, 0)
         userLayout.addWidget(self.statusBar, 2, 1)
 
         # Layout
@@ -70,7 +69,6 @@ class SlotGame(QWidget):
         mainLayout.addLayout(outputLayout, 1, 0)
         mainLayout.addLayout(userLayout, 2, 0)
         self.setLayout(mainLayout)
-
 
 class mainWindow(QMainWindow):
 
@@ -92,57 +90,75 @@ class mainWindow(QMainWindow):
         self.gameWidget.betButton.clicked.connect(self.buttonClicked)
         self.gameWidget.newGameButton.clicked.connect(self.buttonClicked)
 
-        #
-        money = 1000
-        self.gameWidget.currentMoney.setText(str(money))
-        self.gameWidget.Stake.setText('')
+        self.currentMoney = 1000
+        self.gameWidget.currentMoney.setText(str(self.currentMoney))
 
-        # Initialize a new game
+        #실행횟수를 5회로 제한
+        self.currentTrial = 5
+        self.gameWidget.count.setText(str(self.currentTrial))
+
+        # 게임이 시작될때 슬롯값을 비우는 기능
         self.game = Slot()
-        self.slotValue = []
-        self.stake = 0
-        count = 10
-        self.currentmoney = money
-
+        self.slotValue = [None, None, None]
 
     def buttonClicked(self):
         button = self.sender()
         key = button.text()
+        stake = 0
 
         if key == 'Bet':
             print("Betting")
-            self.gameOver = False
-            self.gameWidget.Stake.clear()
+            if self.currentTrial <= 0:
+                print("no trial left")
+                return
+            self.currentTrial -= 1
+            self.gameWidget.count.setText(str(self.currentTrial))
+            try:
+                stake = int(self.gameWidget.stake.text())
+                print(stake)
+                self.currentMoney -= stake
+                self.gameWidget.currentMoney.setText(str(self.currentMoney))
+            except ValueError as e:
+                print("there is no stake value")
+                return
+            
+            self.gameWidget.stake.clear()
 
             self.slotValue = Slot.roll()
-            self.gameWidget.Xoutput.setText(str(self.slotValue[0]))
-            self.gameWidget.Youtput.setText(str(self.slotValue[1]))
-            self.gameWidget.Zoutput.setText(str(self.slotValue[2]))
-            s = 0
-            s = self.stake
-            #보상 계산
-            if self.slotValue[0] == self.slotValue[1] or self.slotValue[0] == self.slotValue[2] or self.slotValue[1] == self.slotValue[2]:
-                currentmoney = 0 - s + s*2
-            # 숫자 세개가 다 일치할 경우와 777이 발생할 경우
-            elif self.slotValue[0] == self.slotValue[1] and self.slotValue[0] == self.slotValue[2]:
-                currentmoney = 0 - s + s*3
-            elif self.slotValue[0] == self.slotValue[1] and self.slotValue[0] == self.slotValue[2] and self.slotValue[0] == 7:
-                currentmoney = 0 - s + s*10
-            #하나도 맞지 않았을 경우
+            for i in range(len(self.slotValue)):
+                self.gameWidget.outputs[i].setText(str(self.slotValue[i]))
+            if self.slotValue[0] == self.slotValue[1] and self.slotValue[0] == self.slotValue[2]:
+                self.gameWidget.statusBar.setText("good job")
+                print("good job")
+                self.currentMoney += stake * 10
+                self.gameWidget.currentMoney.setText(str(self.currentMoney))
+			    #하나만 체크해도 됨.
+                if self.slotValue[0] == 7:
+                    self.gameWidget.statusBar.setText("Jack pot!")
+                    print("Jack pot!")
+                    self.currentMoney += stake * 100
+                    self.gameWidget.currentMoney.setText(str(self.currentMoney))
+            elif self.slotValue[0] ==  self.slotValue[1] or self.slotValue[0] == self.slotValue[2] or self.slotValue[1] == self.slotValue[2]:
+                self.currentMoney += stake * 3
+                self.gameWidget.currentMoney.setText(str(self.currentMoney))
+                self.gameWidget.statusBar.setText("luckyyy!")
+                print("luckyyy!")
             else:
-                currentmoney = 0 - s
-
-            self.gameWidget.currentMoney.setText(str(currentmoney))
-
+                print("kkwang!")
 
         elif key == 'New Game':
             print("new game")
-            self.currentmoney = 1000
-            Count = 10
-            self.gameWidget.Stake.clear()
-            self.gameWidget.Xoutput.setText('')
-            self.gameWidget.Youtput.setText('')
-            self.gameWidget.Zoutput.setText('')
+            self.gameWidget.stake.clear()
+            self.gameWidget.currentMoney.setText(str(self.currentMoney))
+            self.currentMoney = 1000
+            self.gameWidget.currentMoney.setText(str(self.currentMoney))
+
+            self.currentTrial = 5
+            self.gameWidget.count.setText(str(self.currentTrial))
+            for i in range(len(self.slotValue)):
+                self.gameWidget.outputs[i].clear()
+                self.slotValue = [None, None, None]
+
 
 
 if __name__ == '__main__':
