@@ -121,6 +121,7 @@ class mainWindow(QMainWindow):
                     self.currentMoney -= stake
                     self.gameWidget.currentMoney.setText(str(self.currentMoney))
                     self.currentTrial -= 1
+                    self.gameWidget.count.setText("Left trials: " + str(self.currentTrial))
                     #판돈을 걸지않거나 음수,숫자이외의 것을 입력할시 막는 기능
                 elif stake < 0:
                     print("You can't bet negative number")
